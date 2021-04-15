@@ -25,7 +25,7 @@ class OLAPReader;
 class RuntimeProfile;
 class Field;
 class RowBatch;
-// namespace vectorized {
+namespace vectorized {
 class VOlapScanNode;
 
 class VOlapScanner : public OlapScanner {
@@ -51,5 +51,5 @@ private:
     OlapScanNode* _parent;
     RuntimeProfile* _profile;
 };
-// } // namespace vectorized
+} // namespace vectorized
 } // namespace doris

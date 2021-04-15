@@ -23,7 +23,7 @@
 #include "vec/exec/olap_scan_node.h"
 #include "vec/exprs/vexpr_context.h"
 
-namespace doris {
+namespace doris::vectorized {
 
 VOlapScanner::VOlapScanner(RuntimeState* runtime_state, VOlapScanNode* parent, bool aggregation,
                            bool need_agg_finalize, const TPaloScanRange& scan_range,
@@ -97,7 +97,7 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
         VLOG_ROW << "VOlapScanner output rows: " << block->rows();
         
         if (_vconjunct_ctx != nullptr) {
-            SCOPED_TIMER(_parent->_vfilter_timer);
+            SCOPED_TIMER(_vfilter_timer);
             int result_column_id = -1;
             _vconjunct_ctx->execute(block, &result_column_id);
             Block::filter_block(block, result_column_id, _tuple_desc->slots().size());
