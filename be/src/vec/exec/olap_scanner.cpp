@@ -51,6 +51,7 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
             columns.emplace_back(slot->get_empty_mutable_column());
         }
         while (true) {
+            SCOPED_TIMER(_parent->_scan_timer);
             // block is full, break
             if (state->batch_size() <= columns[0]->size()) {
                 _update_realtime_counter();
