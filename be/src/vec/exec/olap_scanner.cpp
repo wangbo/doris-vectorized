@@ -50,16 +50,20 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
         for (auto slot : get_query_slots()) {
             columns.emplace_back(slot->get_empty_mutable_column());
         }
+        SCOPED_TIMER(_parent->_scan_timer);
         while (true) {
-            SCOPED_TIMER(_parent->_scan_timer);
             // block is full, break
             if (state->batch_size() <= columns[0]->size()) {
                 _update_realtime_counter();
                 break;
             }
             // Read one row from reader
-            auto res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
+            auto res = OLAP_SUCCESS
+            {
+                SCOPED_TIMER(_parent->_reader_agg_timer);
+                 res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
                                                           agg_object_pool.get(), eof);
+            }
             if (res != OLAP_SUCCESS) {
                 std::stringstream ss;
                 ss << "Internal Error: read storage fail. res=" << res
@@ -74,7 +78,10 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
 
             _num_rows_read++;
 
-            _convert_row_to_block(&columns);
+            {
+                SCOPED_TIMER(_parent->_vblock_convert_timer);
+                _convert_row_to_block(&columns);
+            }
             VLOG_ROW << "VOlapScanner input row: " << _read_row_cursor.to_string();
 
             if (raw_rows_read() >= raw_rows_threshold) {
@@ -90,6 +97,7 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
         VLOG_ROW << "VOlapScanner output rows: " << block->rows();
         
         if (_vconjunct_ctx != nullptr) {
+            SCOPED_TIMER(_parent->_vfilter_timer);
             int result_column_id = -1;
             _vconjunct_ctx->execute(block, &result_column_id);
             Block::filter_block(block, result_column_id, _tuple_desc->slots().size());

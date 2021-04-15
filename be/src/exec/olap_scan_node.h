@@ -191,6 +191,7 @@ protected:
                         RuntimeProfile* profile);
 
     friend class OlapScanner;
+    friend class VOlapScanner;
 
     // Tuple id resolved in prepare() to set _tuple_desc;
     TupleId _tuple_id;
@@ -266,6 +267,11 @@ protected:
     RuntimeProfile::Counter* _tablet_counter;
     RuntimeProfile::Counter* _rows_pushed_cond_filtered_counter = nullptr;
     RuntimeProfile::Counter* _reader_init_timer = nullptr;
+
+    RuntimeProfile::Counter* _reader_agg_timer = nullptr;
+    RuntimeProfile::Counter* _vblock_convert_timer = nullptr;
+    RuntimeProfile::Counter* _vfilter_timer = nullptr;
+
 
     TResourceInfo* _resource_info;
 

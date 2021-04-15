@@ -262,8 +262,13 @@ Status OlapScanner::get_batch(RuntimeState* state, RowBatch* batch, bool* eof) {
                 break;
             }
             // Read one row from reader
-            auto res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
+            auto res = OLAP_SUCCESS;
+            {
+                SCOPED_TIMER(_parent->_reader_agg_timer);
+                res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
                                                           batch->agg_object_pool(), eof);
+            }
+
             if (res != OLAP_SUCCESS) {
                 std::stringstream ss;
                 ss << "Internal Error: read storage fail. res=" << res
@@ -277,8 +282,12 @@ Status OlapScanner::get_batch(RuntimeState* state, RowBatch* batch, bool* eof) {
             }
 
             _num_rows_read++;
+            
+            {
+                SCOPED_TIMER(_parent->_vblock_convert_timer);
+                _convert_row_to_tuple(tuple);
+            }
 
-            _convert_row_to_tuple(tuple);
             if (VLOG_ROW_IS_ON) {
                 VLOG_ROW << "OlapScanner input row: " << Tuple::to_string(tuple, *_tuple_desc);
             }
@@ -289,6 +298,7 @@ Status OlapScanner::get_batch(RuntimeState* state, RowBatch* batch, bool* eof) {
             row->set_tuple(_tuple_idx, tuple);
 
             do {
+                SCOPED_TIMER(_parent->_vfilter_timer);
                 // 3.5.1 Using direct conjuncts to filter data
                 if (_eval_conjuncts_fn != nullptr) {
                     if (!_eval_conjuncts_fn(&_conjunct_ctxs[0], _direct_conjunct_size, row)) {

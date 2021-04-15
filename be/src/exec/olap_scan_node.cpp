@@ -141,6 +141,10 @@ void OlapScanNode::_init_counter(RuntimeState* state) {
     _scanner_wait_batch_timer = ADD_TIMER(_runtime_profile, "ScannerBatchWaitTime");
     // time of scan thread to wait for worker thread of the thread pool
     _scanner_wait_worker_timer = ADD_TIMER(_runtime_profile, "ScannerWorkerWaitTime");
+
+    _reader_agg_timer = ADD_TIMER(_runtime_profile, "ReaderAggTime");
+    _vblock_convert_timer = ADD_TIMER(_runtime_profile, "VBlockConvertTime");
+    _vfilter_timer = ADD_TIMER(_runtime_profile, "VFilterTime");
 }
 
 Status OlapScanNode::prepare(RuntimeState* state) {
