@@ -191,7 +191,7 @@ protected:
                         RuntimeProfile* profile);
 
     friend class OlapScanner;
-    friend class doris::vectorized::VOlapScanner;
+    friend class VOlapScanner;
 
     // Tuple id resolved in prepare() to set _tuple_desc;
     TupleId _tuple_id;

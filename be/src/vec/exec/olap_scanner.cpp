@@ -23,7 +23,7 @@
 #include "vec/exec/olap_scan_node.h"
 #include "vec/exprs/vexpr_context.h"
 
-namespace doris::vectorized {
+namespace doris {
 
 VOlapScanner::VOlapScanner(RuntimeState* runtime_state, VOlapScanNode* parent, bool aggregation,
                            bool need_agg_finalize, const TPaloScanRange& scan_range,
