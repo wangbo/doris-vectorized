@@ -34,7 +34,6 @@ public:
     VOlapScanNode(ObjectPool* pool, const TPlanNode& tnode, const DescriptorTbl& descs);
     ~VOlapScanNode();
 
-    virtual Status prepare(RuntimeState* state);
     virtual void transfer_thread(RuntimeState* state);
     virtual void scanner_thread(VOlapScanner* scanner);
     virtual Status get_next(RuntimeState* state, RowBatch* row_batch, bool* eos) {
@@ -46,12 +45,6 @@ public:
     virtual Status close(RuntimeState* state);
 
     friend class VOlapScanner;
-
-protected:
-        // for vec test
-    RuntimeProfile::Counter* _reader_agg_timer = nullptr;
-    RuntimeProfile::Counter* _vblock_convert_timer = nullptr;
-    RuntimeProfile::Counter* _vfilter_timer = nullptr;
 
 private:
     std::list<Block*> _scan_blocks;
