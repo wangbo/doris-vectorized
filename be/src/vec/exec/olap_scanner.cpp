@@ -50,7 +50,7 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
         for (auto slot : get_query_slots()) {
             columns.emplace_back(slot->get_empty_mutable_column());
         }
-        SCOPED_TIMER(_parent->_scan_timer);
+        
         while (true) {
             // block is full, break
             if (state->batch_size() <= columns[0]->size()) {
@@ -60,8 +60,8 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
             // Read one row from reader
             auto res = OLAP_SUCCESS
             {
-                SCOPED_TIMER(_parent->_reader_agg_timer);
-                 res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
+                SCOPED_RAW_TIMER(&_reader_agg_time);
+                res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
                                                           agg_object_pool.get(), eof);
             }
             if (res != OLAP_SUCCESS) {
@@ -79,7 +79,7 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
             _num_rows_read++;
 
             {
-                SCOPED_TIMER(_parent->_vblock_convert_timer);
+                SCOPED_RAW_TIMER(&_vblock_convert_time);
                 _convert_row_to_block(&columns);
             }
             VLOG_ROW << "VOlapScanner input row: " << _read_row_cursor.to_string();
@@ -97,7 +97,7 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
         VLOG_ROW << "VOlapScanner output rows: " << block->rows();
         
         if (_vconjunct_ctx != nullptr) {
-            SCOPED_TIMER(_vfilter_timer);
+            SCOPED_RAW_TIMER(&_vfilter_time);
             int result_column_id = -1;
             _vconjunct_ctx->execute(block, &result_column_id);
             Block::filter_block(block, result_column_id, _tuple_desc->slots().size());

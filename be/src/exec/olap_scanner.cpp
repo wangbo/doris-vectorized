@@ -254,7 +254,7 @@ Status OlapScanner::get_batch(RuntimeState* state, RowBatch* batch, bool* eof) {
 
     int64_t raw_rows_threshold = raw_rows_read() + config::doris_scanner_row_num;
     {
-        SCOPED_TIMER(_parent->_scan_timer);
+        // SCOPED_TIMER(_parent->_scan_timer);
         while (true) {
             // Batch is full, break
             if (batch->is_full()) {
@@ -264,7 +264,7 @@ Status OlapScanner::get_batch(RuntimeState* state, RowBatch* batch, bool* eof) {
             // Read one row from reader
             auto res = OLAP_SUCCESS;
             {
-                SCOPED_TIMER(_parent->_reader_agg_timer);
+                SCOPED_RAW_TIMER(&_reader_agg_time);
                 res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
                                                           batch->agg_object_pool(), eof);
             }
@@ -284,7 +284,7 @@ Status OlapScanner::get_batch(RuntimeState* state, RowBatch* batch, bool* eof) {
             _num_rows_read++;
             
             {
-                SCOPED_TIMER(_parent->_vblock_convert_timer);
+                SCOPED_RAW_TIMER(&_vblock_convert_time);
                 _convert_row_to_tuple(tuple);
             }
 
@@ -298,7 +298,7 @@ Status OlapScanner::get_batch(RuntimeState* state, RowBatch* batch, bool* eof) {
             row->set_tuple(_tuple_idx, tuple);
 
             do {
-                SCOPED_TIMER(_parent->_vfilter_timer);
+                SCOPED_RAW_TIMER(&_vfilter_time);
                 // 3.5.1 Using direct conjuncts to filter data
                 if (_eval_conjuncts_fn != nullptr) {
                     if (!_eval_conjuncts_fn(&_conjunct_ctxs[0], _direct_conjunct_size, row)) {
@@ -509,6 +509,10 @@ void OlapScanner::update_counter() {
 
     COUNTER_UPDATE(_parent->_filtered_segment_counter, _reader->stats().filtered_segment_number);
     COUNTER_UPDATE(_parent->_total_segment_counter, _reader->stats().total_segment_number);
+
+    COUNTER_UPDATE(_parent->_reader_agg_timer, _reader_agg_time);
+    COUNTER_UPDATE(_parent->_vblock_convert_timer, _vblock_convert_time);
+    COUNTER_UPDATE(_parent->_vfilter_timer, _vfilter_time);
 
     DorisMetrics::instance()->query_scan_bytes->increment(_compressed_bytes_read);
     DorisMetrics::instance()->query_scan_rows->increment(_raw_rows_read);

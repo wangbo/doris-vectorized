@@ -268,6 +268,7 @@ protected:
     RuntimeProfile::Counter* _rows_pushed_cond_filtered_counter = nullptr;
     RuntimeProfile::Counter* _reader_init_timer = nullptr;
 
+    // // for vec test
     RuntimeProfile::Counter* _reader_agg_timer = nullptr;
     RuntimeProfile::Counter* _vblock_convert_timer = nullptr;
     RuntimeProfile::Counter* _vfilter_timer = nullptr;

@@ -139,6 +139,11 @@ protected:
     int64_t _raw_rows_read = 0;
     int64_t _compressed_bytes_read = 0;
 
+    // for vec test
+    int64_t _reader_agg_time = 0;
+    int64_t _vblock_convert_time = 0;
+    int64_t _vfilter_time = 0;
+
     RuntimeProfile::Counter* _rows_pushed_cond_filtered_counter = nullptr;
     // number rows filtered by pushed condition
     int64_t _num_rows_pushed_cond_filtered = 0;
