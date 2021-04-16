@@ -58,7 +58,7 @@ Status VOlapScanner::get_block(RuntimeState* state, vectorized::Block* block, bo
                 break;
             }
             // Read one row from reader
-            auto res = OLAP_SUCCESS
+            auto res = OLAP_SUCCESS;
             {
                 SCOPED_RAW_TIMER(&_reader_agg_time);
                 res = _reader->next_row_with_aggregation(&_read_row_cursor, mem_pool.get(),
