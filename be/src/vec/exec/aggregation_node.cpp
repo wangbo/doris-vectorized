@@ -59,7 +59,7 @@ Status AggregationNode::init(const TPlanNode& tnode, RuntimeState* state) {
 
 Status AggregationNode::prepare(RuntimeState* state) {
     RETURN_IF_ERROR(ExecNode::prepare(state));
-
+    _build_timer = ADD_TIMER(runtime_profile(), "BuildTime");
     SCOPED_TIMER(_runtime_profile->total_time_counter());
     _intermediate_tuple_desc = state->desc_tbl().get_tuple_descriptor(_intermediate_tuple_id);
     _output_tuple_desc = state->desc_tbl().get_tuple_descriptor(_output_tuple_id);
@@ -151,6 +151,7 @@ Status AggregationNode::open(RuntimeState* state) {
             continue;
         }
         if (_agg_data._type == AggregatedDataVariants::Type::without_key) {
+            SCOPED_TIMER(_build_timer);
             // process no grouping key
             RETURN_IF_ERROR(_execute_without_key(&block));
         } else {

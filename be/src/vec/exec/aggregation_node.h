@@ -141,6 +141,9 @@ private:
     // add tracker here
     Arena _agg_arena_pool;
 
+    // Time spent processing the child rows
+    RuntimeProfile::Counter* _build_timer;
+
 private:
     Status _create_agg_status(AggregateDataPtr data);
     Status _get_without_key_result(RuntimeState* state, Block* block, bool* eos);
